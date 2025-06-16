@@ -3,38 +3,63 @@
 <head>
   <title>AI Fitness Coach</title>
   <style>
-    /* Optional: center the button */
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
     #vapi-button-container {
       margin: 20px 0;
-      text-align: center;
+    }
+
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      text-align: left;
+      display: inline-block;
     }
   </style>
 </head>
 <body>
   <h1>Talk to Your AI Trainer</h1>
 
-  <!-- placeholder for the injected button -->
+  <!-- Injected Vapi widget button -->
   <div id="vapi-button-container"></div>
 
   <h2>Your Workout Plan:</h2>
   <pre id="workout">{{ workout or 'Complete the call to see your plan.' }}</pre>
 
-  <!-- the script‑tag widget -->
+  <!-- Vapi SDK script -->
   <script>
     (function(d, t) {
       var g = document.createElement(t),
           s = d.getElementsByTagName(t)[0];
       g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+      g.defer = true;
       g.async = true;
       s.parentNode.insertBefore(g, s);
+
       g.onload = function() {
-        window.vapiSDK.run({
-          apiKey: "{{ vapi_public_key }}",   // your public key
-          assistant: "{{ ASSISTANT_ID }}",   // your assistant ID
+        const vapi = window.vapiSDK.run({
+          apiKey: "{{ vapi_public_key }}",
+          assistant: "{{ ASSISTANT_ID }}",
           config: {
-            label: "Start Workout Call",     // button text
-            container: "#vapi-button-container", // render into this div
+            label: "Start Workout Call",
+            container: "#vapi-button-container",
             theme: "light"
+          }
+        });
+
+        // Listen to assistant messages
+        vapi.on('message', (message) => {
+          if (message.type === 'transcript' && /Workout Plan:/i.test(message.transcript)) {
+            fetch('/_update-workout', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ workout: message.transcript })
+            }).then(() => location.reload());
           }
         });
       };
