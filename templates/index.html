@@ -1,31 +1,29 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>AI Fitness Coach</title>
-  <script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web/dist/bundle.js"></script>
-</head>
-<body>
-  <h1>Talk to Your AI Trainer</h1>
-  <button onclick="startCall()">Start Call</button>
+  <head>
+    <title>AI Fitness Coach</title>
+  </head>
+  <body>
+    <h1>Talk to Your AI Trainer</h1>
+    <!-- The script‑tag below injects your call button -->
+    <script>
+      (function(d, t) {
+        var g = document.createElement(t),
+            s = d.getElementsByTagName(t)[0];
+        g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+        g.async = true;
+        s.parentNode.insertBefore(g, s);
+        g.onload = function() {
+          window.vapiSDK.run({
+            apiKey: '{{ VAPI_PUBLIC_KEY }}',
+            assistant: '{{ ASSISTANT_ID }}',
+            config: { /* optional styling */ }
+          });
+        };
+      })(document, "script");
+    </script>
 
-  <h2>Your Workout Plan:</h2>
-  <pre id="workout">{{ workout or 'Complete the call to see your plan.' }}</pre>
-
-  <script>
-    const publicKey = "{{ vapi_public_key }}";
-
-    function startCall() {
-      fetch('/start-call', { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-          const callId = data.call.id;
-          const vapi = new Vapi({ apiKey: publicKey });
-          vapi.start({ callId });
-        });
-    }
-
-    // Auto-refresh the page every 10 seconds to show new workout plans
-    setInterval(() => window.location.reload(), 10000);
-  </script>
-</body>
+    <h2>Your Workout Plan:</h2>
+    <pre id="workout">{{ workout or 'Complete the call to see your plan.' }}</pre>
+  </body>
 </html>
