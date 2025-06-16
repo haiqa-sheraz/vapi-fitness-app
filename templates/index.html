@@ -2,11 +2,24 @@
 <html>
 <head>
   <title>AI Fitness Coach</title>
+  <style>
+    /* Optional: center the button */
+    #vapi-button-container {
+      margin: 20px 0;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
   <h1>Talk to Your AI Trainer</h1>
 
-  <!-- Vapi widget will inject this button for you: -->
+  <!-- placeholder for the injected button -->
+  <div id="vapi-button-container"></div>
+
+  <h2>Your Workout Plan:</h2>
+  <pre id="workout">{{ workout or 'Complete the call to see your plan.' }}</pre>
+
+  <!-- the script‑tag widget -->
   <script>
     (function(d, t) {
       var g = document.createElement(t),
@@ -16,19 +29,16 @@
       s.parentNode.insertBefore(g, s);
       g.onload = function() {
         window.vapiSDK.run({
-          apiKey: "{{ vapi_public_key }}",    // your Vapi public key
-          assistant: "{{ ASSISTANT_ID }}",    // your Assistant ID
+          apiKey: "{{ vapi_public_key }}",   // your public key
+          assistant: "{{ ASSISTANT_ID }}",   // your assistant ID
           config: {
-            label: "Start Workout Call",      // text on the injected button
-            theme: "light",                   // or "dark"
-            position: "bottom-right"          // where the button appears
+            label: "Start Workout Call",     // button text
+            container: "#vapi-button-container", // render into this div
+            theme: "light"
           }
         });
       };
     })(document, "script");
   </script>
-
-  <h2>Your Workout Plan:</h2>
-  <pre id="workout">{{ workout or 'Complete the call to see your plan.' }}</pre>
 </body>
 </html>
