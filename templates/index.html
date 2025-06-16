@@ -50,7 +50,7 @@
           }
         });
 
-        // Listen to assistant messages
+        // Capture the workout plan during the call
         vapi.on('message', (message) => {
           if (message.type === 'transcript' && /Workout Plan:/i.test(message.transcript)) {
             fetch('/_update-workout', {
@@ -59,8 +59,13 @@
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({ workout: message.transcript })
-            }).then(() => location.reload());
+            });
           }
+        });
+
+        // Reload page after call ends to show updated plan
+        vapi.on('call-end', () => {
+          location.reload();
         });
       };
     })(document, "script");
