@@ -50,9 +50,11 @@
           }
         });
 
-        // Capture the workout plan during the call
+        // Capture the workout plan dynamically without reload
         vapi.on('message', (message) => {
-          if (message.type === 'transcript' && /Workout Plan:/i.test(message.transcript)) {
+          console.log('Message received:', message); // Debug log
+          if (message.type === 'transcript' && /plan/i.test(message.transcript)) {
+            // Send to Flask (optional if you want it stored server-side)
             fetch('/_update-workout', {
               method: 'POST',
               headers: {
@@ -60,12 +62,11 @@
               },
               body: JSON.stringify({ workout: message.transcript })
             });
-          }
-        });
 
-        // Reload page after call ends to show updated plan
-        vapi.on('call-end', () => {
-          location.reload();
+            // Update page content without reload
+            const workoutEl = document.getElementById('workout');
+            workoutEl.textContent = message.transcript;
+          }
         });
       };
     })(document, "script");
