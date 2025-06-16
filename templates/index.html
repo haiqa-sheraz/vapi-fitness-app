@@ -1,29 +1,34 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>AI Fitness Coach</title>
-  </head>
-  <body>
-    <h1>Talk to Your AI Trainer</h1>
-    <!-- The script‑tag below injects your call button -->
-    <script>
-      (function(d, t) {
-        var g = document.createElement(t),
-            s = d.getElementsByTagName(t)[0];
-        g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
-        g.async = true;
-        s.parentNode.insertBefore(g, s);
-        g.onload = function() {
-          window.vapiSDK.run({
-            apiKey: '{{ VAPI_PUBLIC_KEY }}',
-            assistant: '{{ ASSISTANT_ID }}',
-            config: { /* optional styling */ }
-          });
-        };
-      })(document, "script");
-    </script>
+<head>
+  <title>AI Fitness Coach</title>
+</head>
+<body>
+  <h1>Talk to Your AI Trainer</h1>
 
-    <h2>Your Workout Plan:</h2>
-    <pre id="workout">{{ workout or 'Complete the call to see your plan.' }}</pre>
-  </body>
+  <!-- Vapi widget will inject this button for you: -->
+  <script>
+    (function(d, t) {
+      var g = document.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+      g.async = true;
+      s.parentNode.insertBefore(g, s);
+      g.onload = function() {
+        window.vapiSDK.run({
+          apiKey: "{{ vapi_public_key }}",    // your Vapi public key
+          assistant: "{{ ASSISTANT_ID }}",    // your Assistant ID
+          config: {
+            label: "Start Workout Call",      // text on the injected button
+            theme: "light",                   // or "dark"
+            position: "bottom-right"          // where the button appears
+          }
+        });
+      };
+    })(document, "script");
+  </script>
+
+  <h2>Your Workout Plan:</h2>
+  <pre id="workout">{{ workout or 'Complete the call to see your plan.' }}</pre>
+</body>
 </html>
