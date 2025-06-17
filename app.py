@@ -6,7 +6,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Store last workout message
+# Store last call summary
 call_data = {}
 
 # Environment variables
@@ -15,17 +15,19 @@ ASSISTANT_ID = os.getenv("VAPI_ASSISTANT_ID")
 
 @app.route('/')
 def index():
-    return render_template('index.html',
-                           workout=call_data.get("workout"),
-                           vapi_public_key=VAPI_PUBLIC_KEY,
-                           ASSISTANT_ID=ASSISTANT_ID)
+    return render_template(
+        'index.html',
+        summary=call_data.get("summary"),
+        vapi_public_key=VAPI_PUBLIC_KEY,
+        ASSISTANT_ID=ASSISTANT_ID
+    )
 
-@app.route('/_update-workout', methods=['POST'])
-def update_workout():
+@app.route('/_update-summary', methods=['POST'])
+def update_summary():
     data = request.get_json()
-    workout = data.get("workout")
-    if workout:
-        call_data["workout"] = workout
+    summary = data.get("summary")
+    if summary:
+        call_data["summary"] = summary
     return '', 200
 
 if __name__ == '__main__':

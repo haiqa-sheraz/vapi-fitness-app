@@ -7,11 +7,9 @@
       font-family: Arial, sans-serif;
       text-align: center;
     }
-
     #vapi-button-container {
       margin: 20px 0;
     }
-
     pre {
       background: #f4f4f4;
       padding: 10px;
@@ -26,8 +24,8 @@
   <!-- Injected Vapi widget button -->
   <div id="vapi-button-container"></div>
 
-  <h2>Your Workout Plan:</h2>
-  <pre id="workout">{{ workout or 'Complete the call to see your plan.' }}</pre>
+  <h2>Call Summary:</h2>
+  <pre id="summary">{{ workout or 'Complete the call to see your Workout.' }}</pre>
 
   <!-- Vapi SDK script -->
   <script>
@@ -50,22 +48,25 @@
           }
         });
 
-        // Capture the workout plan dynamically without reload
+        // When the SDK emits any message, check for the post-call summary object
         vapi.on('message', (message) => {
-          console.log('Message received:', message); // Debug log
-          if (message.type === 'transcript' && /Workout plan/i.test(message.transcript)) {
-            // Send to Flask (optional if you want it stored server-side)
-            fetch('/_update-workout', {
+          // once the call ends, Vapi includes the analysis.summary field
+          if (
+            message.call &&
+            message.call.analysis &&
+            message.call.analysis.summary
+          ) {
+            const summary = message.call.analysis.summary;
+
+            // Send summary to Flask to persist
+            fetch('/_update-summary', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ workout: message.transcript })
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ summary })
             });
 
             // Update page content without reload
-            const workoutEl = document.getElementById('workout');
-            workoutEl.textContent = message.transcript;
+            document.getElementById('summary').textContent = summary;
           }
         });
       };
@@ -73,5 +74,3 @@
   </script>
 </body>
 </html>
-
-
