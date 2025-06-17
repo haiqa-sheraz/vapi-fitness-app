@@ -15,6 +15,9 @@
       padding: 10px;
       text-align: left;
       display: inline-block;
+      min-height: 100px;
+      max-width: 80%;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -25,7 +28,7 @@
   <div id="vapi-button-container"></div>
 
   <h2>Call Summary:</h2>
-  <pre id="summary">{{ workout or 'Complete the call to see your Workout.' }}</pre>
+  <pre id="summary">{{ summary or 'Complete the call to see your summary.' }}</pre>
 
   <!-- Vapi SDK script -->
   <script>
@@ -48,25 +51,33 @@
           }
         });
 
-        // When the SDK emits any message, check for the post-call summary object
+        // Listen for Vapi message events
         vapi.on('message', (message) => {
-          // once the call ends, Vapi includes the analysis.summary field
+          console.log('[VAPI] Message received:', message);
+
+          // Check if call has ended and summary exists
           if (
             message.call &&
             message.call.analysis &&
             message.call.analysis.summary
           ) {
             const summary = message.call.analysis.summary;
+            console.log('[VAPI] Extracted summary:', summary);
 
-            // Send summary to Flask to persist
+            // Send summary to Flask
             fetch('/_update-summary', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ summary })
-            });
+            })
+            .then(() => console.log('[VAPI] Summary sent to backend'))
+            .catch(err => console.error('[VAPI] Failed to send summary:', err));
 
-            // Update page content without reload
-            document.getElementById('summary').textContent = summary;
+            // Display it on the page
+            const summaryEl = document.getElementById('summary');
+            summaryEl.textContent = summary;
+          } else {
+            console.log('[VAPI] No summary found in this message.');
           }
         });
       };
