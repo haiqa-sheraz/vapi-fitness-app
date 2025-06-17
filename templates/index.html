@@ -17,6 +17,7 @@
       padding: 10px;
       text-align: left;
       display: inline-block;
+      white-space: pre-wrap;
     }
   </style>
 </head>
@@ -50,22 +51,21 @@
           }
         });
 
-        // Capture the workout plan dynamically without reload
         vapi.on('message', (message) => {
-          console.log('Message received:', message); // Debug log
-          if (message.type === 'transcript' && /plan/i.test(message.transcript)) {
-            // Send to Flask (optional if you want it stored server-side)
+          console.log('Message received:', message);
+          if (message.type === 'transcript' && /Workout plan/i.test(message.transcript)) {
             fetch('/_update-workout', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({ workout: message.transcript })
+            })
+            .then(res => res.json())
+            .then(data => {
+              const workoutEl = document.getElementById('workout');
+              workoutEl.textContent = data.structured || "Could not parse workout.";
             });
-
-            // Update page content without reload
-            const workoutEl = document.getElementById('workout');
-            workoutEl.textContent = message.transcript;
           }
         });
       };
