@@ -28,7 +28,7 @@
   <div id="vapi-button-container"></div>
 
   <h2>Your Workout Plan:</h2>
-  <pre id="workout">{{ workout or 'Complete the call to see your plan.' }}</pre>
+  <pre id="workout">{{ workout if workout else 'Complete the call to see your plan.' }}</pre>
 
   <!-- Vapi SDK script -->
   <script>
@@ -53,7 +53,7 @@
 
         vapi.on('message', (message) => {
           console.log('Message received:', message);
-          if (message.type === 'transcript' && /Workout plan/i.test(message.transcript)) {
+          if (message.type === 'transcript') {
             fetch('/_update-workout', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },

@@ -13,7 +13,7 @@ call_data = {}
 # Environment variables
 VAPI_PUBLIC_KEY = os.getenv("VAPI_PUBLIC_KEY")
 ASSISTANT_ID = os.getenv("VAPI_ASSISTANT_ID")
-HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")  # Add this in .env
+HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
 LLAMA4_API_URL = "https://api-inference.huggingface.co/models/meta-llama/Llama-4-Scout-17B-16E-Instruct"
 
@@ -39,11 +39,26 @@ Workout Plan:
         }
     }
 
-    response = requests.post(LLAMA4_API_URL, headers=headers, json=payload)
-    if response.status_code == 200:
-        result = response.json()
-        return result[0]["generated_text"].split("Workout Plan:")[-1].strip()
-    return "Could not structure workout plan."
+    try:
+        response = requests.post(LLAMA4_API_URL, headers=headers, json=payload)
+        print("Response from Llama4:", response.status_code, response.text)
+
+        if response.status_code == 200:
+            result = response.json()
+
+            if isinstance(result, list) and "generated_text" in result[0]:
+                text = result[0]["generated_text"]
+            elif isinstance(result, dict) and "generated_text" in result:
+                text = result["generated_text"]
+            else:
+                return "Could not extract workout from response."
+
+            structured = text.split("Workout Plan:")[-1].strip()
+            return structured if structured else "Workout plan not found in response."
+        else:
+            return "Error: Llama4 API did not return 200."
+    except Exception as e:
+        return f"Error processing workout plan: {str(e)}"
 
 @app.route('/')
 def index():
