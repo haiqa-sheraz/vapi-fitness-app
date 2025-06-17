@@ -19,19 +19,29 @@
       max-width: 80%;
       margin-top: 20px;
     }
+    #show-summary {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
   <h1>Talk to Your AI Trainer</h1>
 
-  <!-- Injected Vapi widget button -->
+  <!-- Vapi call button -->
   <div id="vapi-button-container"></div>
 
+  <!-- Button to show summary -->
+  <button id="show-summary">Show Summary</button>
+
   <h2>Call Summary:</h2>
-  <pre id="summary">{{ summary or 'Complete the call to see your summary.' }}</pre>
+  <pre id="summary">{{ summary or 'Complete the call and click the button to view your summary.' }}</pre>
 
   <!-- Vapi SDK script -->
   <script>
+    let vapiMessages = [];
+
     (function(d, t) {
       var g = document.createElement(t),
           s = d.getElementsByTagName(t)[0];
@@ -51,37 +61,48 @@
           }
         });
 
-        // Listen for Vapi message events
+        // Listen for all messages and store them
         vapi.on('message', (message) => {
           console.log('[VAPI] Message received:', message);
+          vapiMessages.push(message);
+        });
+      };
+    })(document, "script");
 
-          // Check if call has ended and summary exists
-          if (
-            message.call &&
-            message.call.analysis &&
-            message.call.analysis.summary
-          ) {
-            const summary = message.call.analysis.summary;
-            console.log('[VAPI] Extracted summary:', summary);
+    // Button click to extract and show summary
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("show-summary").addEventListener("click", function() {
+        console.log("[UI] Show Summary button clicked.");
+        let found = false;
 
-            // Send summary to Flask
+        for (const msg of vapiMessages) {
+          if (msg.call && msg.call.analysis && msg.call.analysis.summary) {
+            const summary = msg.call.analysis.summary;
+            console.log("[VAPI] Summary found in message:", summary);
+
+            // Show on page
+            document.getElementById('summary').textContent = summary;
+
+            // Send to Flask backend
             fetch('/_update-summary', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ summary })
             })
-            .then(() => console.log('[VAPI] Summary sent to backend'))
-            .catch(err => console.error('[VAPI] Failed to send summary:', err));
+            .then(() => console.log('[UI] Summary sent to backend.'))
+            .catch(err => console.error('[ERROR] Sending summary failed:', err));
 
-            // Display it on the page
-            const summaryEl = document.getElementById('summary');
-            summaryEl.textContent = summary;
-          } else {
-            console.log('[VAPI] No summary found in this message.');
+            found = true;
+            break;
           }
-        });
-      };
-    })(document, "script");
+        }
+
+        if (!found) {
+          alert("Summary not found yet. Please wait a moment or check the call finished.");
+          console.log("[UI] Summary not found in any message.");
+        }
+      });
+    });
   </script>
 </body>
 </html>
