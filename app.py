@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()                                   # read .env
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # in‑memory store – good enough for a single‑process dev server
 call_data: dict[str, str] = {}
@@ -51,11 +52,12 @@ def update_summary():
         return jsonify({"error": "summary_not_found"}), 400
 
 
-@app.route("/_get-summary", methods=["GET"])
+@app.route("/_get-summary")
 def get_summary():
-    """Return the last cached summary (or empty string)."""
-    return jsonify({"summary": call_data.get("summary", "")})
-
+    print("[DEBUG] GET /_get-summary called")
+    summary = call_data.get("summary", "")
+    print("[DEBUG] Returning JSON:", {"summary": summary})
+    return jsonify({"summary": summary})
 
 # --------------------------------------------------------------------- #
 #  ❖  ENTRY‑POINT
