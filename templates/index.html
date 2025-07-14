@@ -32,7 +32,7 @@
   <!-- Vapi call button -->
   <div id="vapi-button-container"></div>
 
-  <!-- Button to show summary -->
+  <!-- Button to manually fetch summary -->
   <button id="show-summary">Show Summary</button>
 
   <h2>Call Summary:</h2>
@@ -40,8 +40,6 @@
 
   <!-- Vapi SDK script -->
   <script>
-    let vapiMessages = [];
-
     (function(d, t) {
       var g = document.createElement(t),
           s = d.getElementsByTagName(t)[0];
@@ -61,29 +59,15 @@
           }
         });
 
-        // Listen for all messages and store them
-        vapi.on('message', (message) => {
-          console.log('[VAPI] Message received:', message);
-          vapiMessages.push(message);
-        });
-      };
-    })(document, "script");
+        // Automatically listen for callEnded and extract summary
+        vapi.on('callEnded', (callData) => {
+          console.log('[VAPI] Call ended. Data:', callData);
+          const summary = callData?.analysis?.summary;
 
-    // Button click to extract and show summary
-    document.addEventListener("DOMContentLoaded", function() {
-      document.getElementById("show-summary").addEventListener("click", function() {
-        console.log("[UI] Show Summary button clicked.");
-        let found = false;
-
-        for (const msg of vapiMessages) {
-          if (msg.call && msg.call.analysis && msg.call.analysis.summary) {
-            const summary = msg.call.analysis.summary;
-            console.log("[VAPI] Summary found in message:", summary);
-
-            // Show on page
+          if (summary) {
             document.getElementById('summary').textContent = summary;
 
-            // Send to Flask backend
+            // Send to backend to store
             fetch('/_update-summary', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -91,16 +75,22 @@
             })
             .then(() => console.log('[UI] Summary sent to backend.'))
             .catch(err => console.error('[ERROR] Sending summary failed:', err));
-
-            found = true;
-            break;
+          } else {
+            console.log('[WARN] No summary found in call analysis.');
           }
-        }
+        });
+      };
+    })(document, "script");
 
-        if (!found) {
-          alert("Summary not found yet. Please wait a moment or check the call finished.");
-          console.log("[UI] Summary not found in any message.");
-        }
+    // Button click to fetch stored summary
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("show-summary").addEventListener("click", function() {
+        fetch('/_get-summary')
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('summary').textContent = data.summary || "No summary available yet.";
+          })
+          .catch(err => console.error('[ERROR] Fetching summary failed:', err));
       });
     });
   </script>

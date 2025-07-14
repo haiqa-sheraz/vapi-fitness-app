@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -34,6 +34,10 @@ def update_summary():
     else:
         print("[WARN] No summary found in POST request.")
     return '', 200
+
+@app.route('/_get-summary', methods=['GET'])
+def get_summary():
+    return jsonify({"summary": call_data.get("summary", "")})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
