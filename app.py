@@ -15,7 +15,6 @@ ASSISTANT_ID = os.getenv("VAPI_ASSISTANT_ID")
 
 @app.route('/')
 def index():
-    print(f"[INFO] Rendering index with summary: {call_data.get('summary')}")
     return render_template(
         'index.html',
         summary=call_data.get("summary"),
@@ -27,12 +26,11 @@ def index():
 def update_summary():
     data = request.get_json()
     summary = data.get("summary")
-    print(f"[DEBUG] Received summary from frontend: {summary}")
     if summary:
         call_data["summary"] = summary
-        print("[INFO] Summary stored successfully.")
+        print("[INFO] Summary updated:", summary)
     else:
-        print("[WARN] No summary found in POST request.")
+        print("[WARN] Summary not found in request.")
     return '', 200
 
 @app.route('/_get-summary', methods=['GET'])

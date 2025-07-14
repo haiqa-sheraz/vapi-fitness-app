@@ -32,13 +32,12 @@
   <!-- Vapi call button -->
   <div id="vapi-button-container"></div>
 
-  <!-- Button to manually fetch summary -->
+  <!-- Button to fetch summary from backend -->
   <button id="show-summary">Show Summary</button>
 
   <h2>Call Summary:</h2>
   <pre id="summary">{{ summary or 'Complete the call and click the button to view your summary.' }}</pre>
 
-  <!-- Vapi SDK script -->
   <script>
     (function(d, t) {
       var g = document.createElement(t),
@@ -59,15 +58,17 @@
           }
         });
 
-        // Automatically listen for callEnded and extract summary
+        // Always show summary after call ends, even if success=false
         vapi.on('callEnded', (callData) => {
           console.log('[VAPI] Call ended. Data:', callData);
+
           const summary = callData?.analysis?.summary;
+          const success = callData?.successEvaluation?.success;
+          console.log('[INFO] Call success:', success);
 
           if (summary) {
             document.getElementById('summary').textContent = summary;
 
-            // Send to backend to store
             fetch('/_update-summary', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -76,13 +77,14 @@
             .then(() => console.log('[UI] Summary sent to backend.'))
             .catch(err => console.error('[ERROR] Sending summary failed:', err));
           } else {
-            console.log('[WARN] No summary found in call analysis.');
+            document.getElementById('summary').textContent = "No summary was generated for this call.";
+            console.warn('[WARN] Summary missing in analysis.');
           }
         });
       };
     })(document, "script");
 
-    // Button click to fetch stored summary
+    // "Show Summary" button fetches from backend
     document.addEventListener("DOMContentLoaded", function() {
       document.getElementById("show-summary").addEventListener("click", function() {
         fetch('/_get-summary')
