@@ -1,6 +1,8 @@
 import os
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 
 # --------------------------------------------------------------------- #
 #  ❖  INITIALISATION
