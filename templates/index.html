@@ -18,10 +18,9 @@
 <body>
   <h1>Talk to Your AI Trainer</h1>
 
-  <!-- Vapi call button renders here -->
+  <!-- Vapi call button -->
   <div id="vapi-button-container"></div>
 
-  <!-- Manual refresh button -->
   <button id="show-summary">Show Summary</button>
 
   <h2>Call Summary:</h2>
@@ -29,68 +28,66 @@
     {{ summary or 'Complete the call, then click "Show Summary".' }}
   </pre>
 
-  <!-- Vapi HTML tag SDK -->
   <script>
     (function (d, t) {
       const g = d.createElement(t);
       const s = d.getElementsByTagName(t)[0];
-      g.src   = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+      g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
       g.async = true;
       g.defer = true;
       s.parentNode.insertBefore(g, s);
 
       g.onload = function () {
         const vapi = window.vapiSDK.run({
-          apiKey   : "{{ vapi_public_key }}",
+          apiKey: "{{ vapi_public_key }}",
           assistant: "{{ assistant_id }}",
-          config   : {
-            label     : "Start Workout Call",
-            container : "#vapi-button-container",
-            theme     : "light"
+          config: {
+            label: "Start Workout Call",
+            container: "#vapi-button-container",
+            theme: "light"
           }
         });
 
-        /* ------------------------------------------------------------
-           On call end: show summary immediately AND send to backend
-        ------------------------------------------------------------ */
         vapi.on("callEnded", (callData) => {
-          console.log("[VAPI] Full callData ▶", callData);
+          console.log("[VAPI] Call ended. Data:", callData);
 
-          // ***** look for summary in the documented location *****
-          const analysis = callData?.analysis ?? {};
-          console.log("[DEBUG] analysis ▶", analysis);
-
-          // fallback chain in case key names change
-          const summary = analysis.summary
-                       || analysis.text
-                       || analysis.analysis
-                       || "";
-
-          if (summary) {
-            document.getElementById("summary").textContent = summary;
-
-            // POST summary to Flask
-            fetch("/_update-summary", {
-              method : "POST",
-              headers: { "Content-Type": "application/json" },
-              body   : JSON.stringify({ summary })
-            })
-            .then(() => console.log("[INFO] Summary sent to backend."))
-            .catch((err) =>
-              console.error("[ERROR] Failed POST /_update-summary:", err)
-            );
-          } else {
-            document.getElementById("summary").textContent =
-              "No summary was generated for this call.";
-            console.warn("[WARN] Summary not found inside callData.");
+          const callId = callData?.id;
+          if (!callId) {
+            console.warn("[WARN] No call ID found.");
+            return;
           }
+
+          fetch(`/_fetch-call-summary/${callId}`)
+            .then((res) => res.json())
+            .then((data) => {
+              const summary = data.summary || "";
+              console.log("[DEBUG] Received summary from backend:", summary);
+
+              if (summary) {
+                document.getElementById("summary").textContent = summary;
+
+                // Also cache it on backend
+                fetch("/_update-summary", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ summary })
+                })
+                .then(() => console.log("[INFO] Summary sent to backend."))
+                .catch((err) => console.error("[ERROR] Failed to store summary:", err));
+              } else {
+                document.getElementById("summary").textContent =
+                  "No summary returned from backend.";
+                console.warn("[WARN] Summary missing in API response.");
+              }
+            })
+            .catch((err) =>
+              console.error("[ERROR] Failed to fetch full call details:", err)
+            );
         });
       };
     })(document, "script");
 
-    /* ------------------------------------------------------------
-       "Show Summary" button – fetch from backend, useful on refresh
-    ------------------------------------------------------------ */
+    // Manual "Show Summary" button
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("show-summary").addEventListener("click", () => {
         fetch("/_get-summary")
