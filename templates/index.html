@@ -7,16 +7,27 @@
   <!-- Google Fonts for modern look -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body {
+    html, body {
       min-height: 100vh;
       margin: 0;
+      padding: 0;
       font-family: 'Montserrat', Arial, sans-serif;
       background: radial-gradient(ellipse at 70% 30%, #232a4c 60%, #15192c 100%);
       color: #ececec;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    body {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
+      min-height: 100vh;
+      position: relative;
+      padding-bottom: 110px; /* so content never behind call button */
+      width: 100vw;
+      overflow-x: hidden;
     }
 
     h1 {
@@ -25,12 +36,7 @@
       font-weight: 700;
       letter-spacing: 1.5px;
       text-shadow: 0 2px 16px #28309c55;
-    }
-
-    #vapi-button-container {
-      margin: 28px 0 12px 0;
-      display: flex;
-      justify-content: center;
+      text-align: center;
     }
 
     #show-summary-btn {
@@ -45,15 +51,13 @@
       box-shadow: 0 4px 32px #0ff7df44, 0 1.5px 3px #2224;
       transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
       cursor: pointer;
-      margin: 12px 0 26px 0;
+      margin: 18px 0 26px 0;
     }
-
     #show-summary-btn:hover {
       background: linear-gradient(90deg, #41b883 50%, #1c60c8 100%);
       box-shadow: 0 8px 38px #41b88377, 0 2.5px 6px #121c33cc;
       transform: translateY(-2px) scale(1.04);
     }
-
     .status-msg {
       margin: 0 0 8px 0;
       color: #62d5fa;
@@ -64,7 +68,6 @@
       font-family: 'Roboto Mono', monospace;
       font-weight: 700;
     }
-
     .status-msg:empty {
       display: none;
     }
@@ -76,8 +79,8 @@
       color: #9fdcf5;
       letter-spacing: 1px;
       text-shadow: 0 2px 12px #192f3a88;
+      text-align: center;
     }
-
     pre#summary {
       background: rgba(28, 32, 49, 0.97);
       border-radius: 22px;
@@ -90,15 +93,13 @@
       color: #cbe7fd;
       font-family: 'Roboto Mono', 'Courier New', monospace;
       margin: 0 auto 28px auto;
-      /* Only vertical scroll: */
       overflow-y: auto;
       overflow-x: hidden;
       word-break: break-word;
       white-space: pre-wrap;
-      max-height: 410px;  /* makes vertical scroll appear for long plans */
+      max-height: 410px;
       transition: box-shadow 0.2s;
     }
-
     @media (max-width: 800px) {
       pre#summary {
         width: 94vw;
@@ -113,27 +114,39 @@
       }
     }
 
-    /* Glow for the call button */
-    #vapi-button-container .vapi-call-button,
-    #vapi-button-container button {
-      box-shadow: 0 0 22px #00ffe7, 0 1.5px 8px #18222788 !important;
-      border-radius: 50% !important;
-      outline: none !important;
+    /* Fix/floating call button at the bottom center */
+    #vapi-float-bar {
+      position: fixed !important;
+      bottom: 30px !important;
+      left: 0; right: 0;
+      z-index: 9999 !important;
+      width: 100vw !important;
+      display: flex !important;
+      justify-content: center !important;
+      pointer-events: none;
     }
-    /* Remove focus border on summary button */
-    #show-summary-btn:focus {
-      outline: none;
-      box-shadow: 0 0 0 2px #23c3e6aa;
+    #vapi-float-bar > * {
+      pointer-events: all;
+    }
+    #vapi-button-container {
+      display: none; /* Hide the normal inline button */
     }
   </style>
 </head>
 <body>
-  <h1>Talk to Your AI Trainer</h1>
-  <div id="vapi-button-container"></div>
+  <h1>Talk to your Personalized AI Trainer</h1>
   <button id="show-summary-btn">Show My Workout Plan!</button>
   <div id="status" class="status-msg"></div>
-  <h2>Here is your workout plan</h2>
+  <h2>Here is your workout plan:</h2>
   <pre id="summary">Complete the call, then click "Show My Workout Plan!" to see your workout plan below.</pre>
+
+  <!-- Floating call button bar -->
+  <div id="vapi-float-bar"></div>
+  <!-- This is just a placeholder. The button will be moved here dynamically by JS. -->
+
+  <!-- Hidden normal container for the call button (we'll move it after load) -->
+  <div id="vapi-button-container"></div>
+
   <script>
     (function (d, t) {
       const g = d.createElement(t);
@@ -144,6 +157,7 @@
       s.parentNode.insertBefore(g, s);
 
       g.onload = function () {
+        // 1. Create the button normally in its (hidden) container
         window.vapi = window.vapiSDK.run({
           apiKey: "{{ vapi_public_key }}",
           assistant: "{{ assistant_id }}",
@@ -153,16 +167,25 @@
             theme: "light"
           }
         });
+        // 2. After a moment, move the button into the floating bar
+        setTimeout(function () {
+          var vapiBtn = document.querySelector('#vapi-button-container .vapi-call-button');
+          var floatBar = document.getElementById('vapi-float-bar');
+          if (vapiBtn && floatBar && !floatBar.contains(vapiBtn)) {
+            floatBar.appendChild(vapiBtn);
+            vapiBtn.style.boxShadow = "0 0 32px #00ffe7, 0 2px 14px #18222788";
+            vapiBtn.style.borderRadius = "50%";
+            vapiBtn.style.background = "#2f80ed";
+            vapiBtn.style.pointerEvents = "all";
+          }
+        }, 500); // wait for the button to render
       };
     })(document, "script");
 
-    // Utility function to clean up "**" from summary
     function cleanSummary(summary) {
       if (!summary) return '';
-      // Remove all "**" (including markdown bolding)
       return summary.replace(/\*\*/g, "");
     }
-
     document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("show-summary-btn").addEventListener("click", function () {
         document.getElementById("status").textContent = "Loading your workout plan...";
@@ -171,7 +194,6 @@
           .then((res) => res.json())
           .then((data) => {
             console.log("[DEBUG] Fetched summary API response:", data);
-
             if (data.summary) {
               const cleaned = cleanSummary(data.summary);
               document.getElementById("summary").textContent = cleaned;
