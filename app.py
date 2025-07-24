@@ -12,7 +12,7 @@ load_dotenv()
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# In-memory store – good enough for dev server
+# In-memory store
 call_data: dict[str, str] = {}
 
 # Environment variables
@@ -56,19 +56,34 @@ def get_summary():
     print("[DEBUG] Returning JSON:", {"summary": summary})
     return jsonify({"summary": summary})
 
-@app.route("/_fetch-call-summary/<call_id>")
-def fetch_call_summary(call_id):
-    """Securely fetch call summary from Vapi API."""
+@app.route("/_fetch-latest-summary")
+def fetch_latest_summary():
+    """Fetch latest call summary from Vapi call list."""
     try:
-        url = f"https://api.vapi.ai/v1/calls/{call_id}"
+        url = "https://api.vapi.ai/call?limit=5"
         headers = {"Authorization": f"Bearer {VAPI_API_KEY}"}
         response = requests.get(url, headers=headers)
-        data = response.json()
-        summary = data.get("analysis", {}).get("summary", "")
-        print("[DEBUG] Fetched summary from Vapi API:", summary)
-        return jsonify({"summary": summary})
+        calls = response.json()
+
+        if not isinstance(calls, list) or len(calls) == 0:
+            print("[WARN] No call data received")
+            return jsonify({"error": "no_calls_found"}), 404
+
+        # Sort by createdAt descending
+        calls.sort(key=lambda x: x.get("createdAt", ""), reverse=True)
+        latest_call = calls[0]
+        summary = latest_call.get("summary") or latest_call.get("analysis", {}).get("summary", "")
+
+        print("[DEBUG] Fetched latest summary:", summary)
+
+        if summary:
+            call_data["summary"] = summary
+            return jsonify({"summary": summary})
+        else:
+            return jsonify({"error": "summary_not_found"}), 404
+
     except Exception as e:
-        print("[ERROR] Failed to fetch from Vapi:", repr(e))
+        print("[ERROR] Failed to fetch latest summary:", repr(e))
         return jsonify({"error": "fetch_failed"}), 500
 
 # --------------------------------------------------------------------- #

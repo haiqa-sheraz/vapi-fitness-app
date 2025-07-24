@@ -48,16 +48,10 @@
           }
         });
 
-        vapi.on("callEnded", (callData) => {
-          console.log("[VAPI] Call ended. Data:", callData);
+        vapi.on("callEnded", () => {
+          console.log("[VAPI] Call ended. Fetching latest summary...");
 
-          const callId = callData?.id;
-          if (!callId) {
-            console.warn("[WARN] No call ID found.");
-            return;
-          }
-
-          fetch(`/_fetch-call-summary/${callId}`)
+          fetch(`/_fetch-latest-summary`)
             .then((res) => res.json())
             .then((data) => {
               const summary = data.summary || "";
@@ -66,7 +60,6 @@
               if (summary) {
                 document.getElementById("summary").textContent = summary;
 
-                // Also cache it on backend
                 fetch("/_update-summary", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -81,13 +74,12 @@
               }
             })
             .catch((err) =>
-              console.error("[ERROR] Failed to fetch full call details:", err)
+              console.error("[ERROR] Failed to fetch latest summary:", err)
             );
         });
       };
     })(document, "script");
 
-    // Manual "Show Summary" button
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("show-summary").addEventListener("click", () => {
         fetch("/_get-summary")
