@@ -12,7 +12,7 @@ load_dotenv()
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# In-memory store
+# In-memory store for latest summary (keeps last fetched summary in memory)
 call_data: dict[str, str] = {}
 
 # Environment variables
@@ -35,27 +35,6 @@ def index():
         assistant_id=ASSISTANT_ID,
     )
 
-@app.route("/_update-summary", methods=["POST"])
-def update_summary():
-    data = request.get_json(silent=True) or {}
-    print("[DEBUG] /_update-summary payload ▶", data)
-
-    summary = data.get("summary")
-    if summary:
-        call_data["summary"] = summary
-        print("[INFO] Summary stored.")
-        return "", 200
-    else:
-        print("[WARN] 'summary' missing in request body!")
-        return jsonify({"error": "summary_not_found"}), 400
-
-@app.route("/_get-summary")
-def get_summary():
-    print("[DEBUG] GET /_get-summary called")
-    summary = call_data.get("summary", "")
-    print("[DEBUG] Returning JSON:", {"summary": summary})
-    return jsonify({"summary": summary})
-
 @app.route("/_fetch-latest-summary")
 def fetch_latest_summary():
     """Fetch latest call summary from Vapi call list."""
@@ -74,8 +53,11 @@ def fetch_latest_summary():
         latest_call = calls[0]
 
         # Try to extract summary from top-level or analysis
-        summary = latest_call.get("summary") or \
-            (latest_call.get("analysis", {}).get("summary") if isinstance(latest_call.get("analysis"), dict) else "")
+        summary = latest_call.get("summary") or (
+            latest_call.get("analysis", {}).get("summary")
+            if isinstance(latest_call.get("analysis"), dict)
+            else ""
+        )
 
         print("[DEBUG] Extracted summary:", summary)
 
@@ -89,6 +71,26 @@ def fetch_latest_summary():
     except Exception as e:
         print("[ERROR] Exception while fetching latest summary:", repr(e))
         return jsonify({"error": "fetch_failed"}), 500
+
+@app.route("/_get-summary")
+def get_summary():
+    print("[DEBUG] GET /_get-summary called")
+    summary = call_data.get("summary", "")
+    print("[DEBUG] Returning JSON:", {"summary": summary})
+    return jsonify({"summary": summary})
+
+@app.route("/_update-summary", methods=["POST"])
+def update_summary():
+    data = request.get_json(silent=True) or {}
+    print("[DEBUG] /_update-summary payload ▶", data)
+    summary = data.get("summary")
+    if summary:
+        call_data["summary"] = summary
+        print("[INFO] Summary stored.")
+        return "", 200
+    else:
+        print("[WARN] 'summary' missing in request body!")
+        return jsonify({"error": "summary_not_found"}), 400
 
 # --------------------------------------------------------------------- #
 #  ❖  ENTRY‑POINT
