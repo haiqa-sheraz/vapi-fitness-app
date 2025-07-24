@@ -4,35 +4,27 @@
   <meta charset="UTF-8">
   <title>AI Fitness Coach</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-
-    #vapi-button-container {
-      margin: 20px 0;
-    }
-
+    body { font-family: Arial, sans-serif; text-align: center; }
+    #vapi-button-container { margin: 20px 0; }
     pre {
-      background: #f4f4f4;
-      padding: 10px;
-      text-align: left;
-      min-height: 100px;
-      max-width: 80%;
-      margin: 20px auto;
-      white-space: pre-wrap;
+      background: #f4f4f4; padding: 10px; text-align: left;
+      min-height: 100px; max-width: 80%; margin: 20px auto;
+      color: #333;
+      border-radius: 8px;
+    }
+    .status-msg {
+      color: #cc0000; margin: 10px auto; font-size: 1em;
     }
   </style>
 </head>
 <body>
   <h1>Talk to Your AI Trainer</h1>
-
   <!-- Vapi call button -->
   <div id="vapi-button-container"></div>
 
   <h2>Call Summary:</h2>
-  <pre id="summary">Complete a call to see the summary here.</pre>
+  <pre id="summary">{{ summary or 'Complete the call to see the summary below.' }}</pre>
+  <div id="status" class="status-msg"></div>
 
   <script>
     (function (d, t) {
@@ -55,19 +47,29 @@
         });
 
         vapi.on("callEnded", () => {
-          console.log("[VAPI] Call ended. Fetching summary...");
+          document.getElementById("status").textContent = "Fetching summary...";
 
-          fetch("/_fetch-latest-summary")
-            .then(res => res.json())
-            .then(data => {
-              const summary = data.summary || "No summary was returned from the server.";
-              console.log("[DEBUG] Received summary:", summary);
-              document.getElementById("summary").textContent = summary;
+          fetch(`/_fetch-latest-summary`)
+            .then((res) => res.json())
+            .then((data) => {
+              console.log("[DEBUG] Fetched summary API response:", data);
+
+              if (data.summary) {
+                document.getElementById("summary").textContent = data.summary;
+                document.getElementById("status").textContent = "Summary loaded successfully.";
+              } else {
+                document.getElementById("summary").textContent =
+                  data.error ? `Error: ${data.error}` : "No summary was returned from the call.";
+                document.getElementById("status").textContent =
+                  data.error ? `(${data.error})` : "No summary found.";
+              }
             })
-            .catch(err => {
-              console.error("[ERROR] Failed to fetch summary:", err);
+            .catch((err) => {
+              console.error("[ERROR] Fetch summary failed:", err);
               document.getElementById("summary").textContent =
-                "Error fetching summary from the server.";
+                "Failed to load summary from the server.";
+              document.getElementById("status").textContent =
+                "Error connecting to backend.";
             });
         });
       };
