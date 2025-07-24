@@ -4,11 +4,24 @@
   <meta charset="UTF-8">
   <title>AI Fitness Coach</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; }
-    #vapi-button-container { margin: 20px 0; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #vapi-button-container {
+      margin: 20px 0;
+    }
+
     pre {
-      background: #f4f4f4; padding: 10px; text-align: left;
-      min-height: 100px; max-width: 80%; margin: 20px auto;
+      background: #f4f4f4;
+      padding: 10px;
+      text-align: left;
+      min-height: 100px;
+      max-width: 80%;
+      margin: 20px auto;
+      white-space: pre-wrap;
     }
   </style>
 </head>
@@ -19,9 +32,7 @@
   <div id="vapi-button-container"></div>
 
   <h2>Call Summary:</h2>
-  <pre id="summary">
-    {{ summary or 'Complete the call to see the summary below.' }}
-  </pre>
+  <pre id="summary">Complete a call to see the summary here.</pre>
 
   <script>
     (function (d, t) {
@@ -44,25 +55,19 @@
         });
 
         vapi.on("callEnded", () => {
-          console.log("[VAPI] Call ended. Fetching latest summary...");
+          console.log("[VAPI] Call ended. Fetching summary...");
 
-          fetch(`/_fetch-latest-summary`)
-            .then((res) => res.json())
-            .then((data) => {
-              const summary = data.summary || "";
-              console.log("[DEBUG] Latest summary received:", summary);
-
-              if (summary) {
-                document.getElementById("summary").textContent = summary;
-              } else {
-                document.getElementById("summary").textContent =
-                  "No summary was returned from the call.";
-              }
+          fetch("/_fetch-latest-summary")
+            .then(res => res.json())
+            .then(data => {
+              const summary = data.summary || "No summary was returned from the server.";
+              console.log("[DEBUG] Received summary:", summary);
+              document.getElementById("summary").textContent = summary;
             })
-            .catch((err) => {
-              console.error("[ERROR] Failed to fetch latest summary:", err);
+            .catch(err => {
+              console.error("[ERROR] Failed to fetch summary:", err);
               document.getElementById("summary").textContent =
-                "Failed to load summary from the server.";
+                "Error fetching summary from the server.";
             });
         });
       };
