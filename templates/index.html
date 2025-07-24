@@ -79,7 +79,7 @@
     }
 
     pre#summary {
-      background: rgba(28, 32, 49, 0.95);
+      background: rgba(28, 32, 49, 0.97);
       border-radius: 22px;
       box-shadow: 0 6px 24px #10132299, 0 2px 12px #23c3e655;
       padding: 26px 28px 22px 32px;
@@ -90,8 +90,13 @@
       color: #cbe7fd;
       font-family: 'Roboto Mono', 'Courier New', monospace;
       margin: 0 auto 28px auto;
-      overflow-x: auto;
+      /* Only vertical scroll: */
+      overflow-y: auto;
+      overflow-x: hidden;
       word-break: break-word;
+      white-space: pre-wrap;
+      max-height: 410px;  /* makes vertical scroll appear for long plans */
+      transition: box-shadow 0.2s;
     }
 
     @media (max-width: 800px) {
@@ -125,10 +130,10 @@
 <body>
   <h1>Talk to Your AI Trainer</h1>
   <div id="vapi-button-container"></div>
-  <button id="show-summary-btn">Show Summary</button>
+  <button id="show-summary-btn">Show My Workout Plan!</button>
   <div id="status" class="status-msg"></div>
-  <h2>Call Summary:</h2>
-  <pre id="summary">{{ summary or 'Complete the call and click "Show Summary" to see the summary below.' }}</pre>
+  <h2>Here is your workout plan</h2>
+  <pre id="summary">Complete the call, then click "Show My Workout Plan!" to see your workout plan below.</pre>
   <script>
     (function (d, t) {
       const g = d.createElement(t);
@@ -151,30 +156,39 @@
       };
     })(document, "script");
 
+    // Utility function to clean up "**" from summary
+    function cleanSummary(summary) {
+      if (!summary) return '';
+      // Remove all "**" (including markdown bolding)
+      return summary.replace(/\*\*/g, "");
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("show-summary-btn").addEventListener("click", function () {
-        document.getElementById("status").textContent = "Fetching summary...";
+        document.getElementById("status").textContent = "Loading your workout plan...";
+        document.getElementById("status").style.color = "#41ffb8";
         fetch(`/_fetch-latest-summary`)
           .then((res) => res.json())
           .then((data) => {
             console.log("[DEBUG] Fetched summary API response:", data);
 
             if (data.summary) {
-              document.getElementById("summary").textContent = data.summary;
-              document.getElementById("status").textContent = "Summary loaded successfully.";
+              const cleaned = cleanSummary(data.summary);
+              document.getElementById("summary").textContent = cleaned;
+              document.getElementById("status").textContent = "Workout plan loaded successfully!";
               document.getElementById("status").style.color = "#41ffb8";
             } else {
               document.getElementById("summary").textContent =
-                data.error ? `Error: ${data.error}` : "No summary was returned from the call.";
+                data.error ? `Error: ${data.error}` : "No workout plan was returned from your call.";
               document.getElementById("status").textContent =
-                data.error ? `(${data.error})` : "No summary found.";
+                data.error ? `(${data.error})` : "No workout plan found.";
               document.getElementById("status").style.color = "#fa6262";
             }
           })
           .catch((err) => {
             console.error("[ERROR] Fetch summary failed:", err);
             document.getElementById("summary").textContent =
-              "Failed to load summary from the server.";
+              "Failed to load workout plan from the server.";
             document.getElementById("status").textContent =
               "Error connecting to backend.";
             document.getElementById("status").style.color = "#fa6262";
