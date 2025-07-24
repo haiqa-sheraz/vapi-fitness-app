@@ -25,7 +25,7 @@
       justify-content: flex-start;
       min-height: 100vh;
       position: relative;
-      padding-bottom: 110px; /* so content never behind call button */
+      padding-bottom: 110px; /* ensures nothing goes behind call button */
       width: 100vw;
       overflow-x: hidden;
     }
@@ -86,18 +86,20 @@
       border-radius: 22px;
       box-shadow: 0 6px 24px #10132299, 0 2px 12px #23c3e655;
       padding: 26px 28px 22px 32px;
-      min-height: 120px;
-      max-width: 90vw;
-      width: 60vw;
       font-size: 1.12rem;
       color: #cbe7fd;
       font-family: 'Roboto Mono', 'Courier New', monospace;
       margin: 0 auto 28px auto;
+      width: 60vw;
+      max-width: 90vw;
+      min-width: 250px;
+      height: 410px;        /* fixed height for desktop */
+      min-height: 120px;
+      max-height: 410px;
       overflow-y: auto;
       overflow-x: hidden;
       word-break: break-word;
       white-space: pre-wrap;
-      max-height: 410px;
       transition: box-shadow 0.2s;
     }
     @media (max-width: 800px) {
@@ -105,6 +107,9 @@
         width: 94vw;
         font-size: 1em;
         padding: 18px 10px 18px 14px;
+        height: 260px;     /* fixed height for mobile */
+        max-height: 260px;
+        min-height: 80px;
       }
       h1 {
         font-size: 2.1rem;
@@ -142,8 +147,6 @@
 
   <!-- Floating call button bar -->
   <div id="vapi-float-bar"></div>
-  <!-- This is just a placeholder. The button will be moved here dynamically by JS. -->
-
   <!-- Hidden normal container for the call button (we'll move it after load) -->
   <div id="vapi-button-container"></div>
 
@@ -193,7 +196,6 @@
         fetch(`/_fetch-latest-summary`)
           .then((res) => res.json())
           .then((data) => {
-            console.log("[DEBUG] Fetched summary API response:", data);
             if (data.summary) {
               const cleaned = cleanSummary(data.summary);
               document.getElementById("summary").textContent = cleaned;
@@ -208,7 +210,6 @@
             }
           })
           .catch((err) => {
-            console.error("[ERROR] Fetch summary failed:", err);
             document.getElementById("summary").textContent =
               "Failed to load workout plan from the server.";
             document.getElementById("status").textContent =
