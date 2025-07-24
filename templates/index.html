@@ -10,9 +10,6 @@
       background: #f4f4f4; padding: 10px; text-align: left;
       min-height: 100px; max-width: 80%; margin: 20px auto;
     }
-    #show-summary {
-      margin-top: 20px; padding: 10px 20px; font-size: 16px;
-    }
   </style>
 </head>
 <body>
@@ -21,11 +18,9 @@
   <!-- Vapi call button -->
   <div id="vapi-button-container"></div>
 
-  <button id="show-summary">Show Summary</button>
-
   <h2>Call Summary:</h2>
   <pre id="summary">
-    {{ summary or 'Complete the call, then click "Show Summary".' }}
+    {{ summary or 'Complete the call to see the summary below.' }}
   </pre>
 
   <script>
@@ -55,44 +50,23 @@
             .then((res) => res.json())
             .then((data) => {
               const summary = data.summary || "";
-              console.log("[DEBUG] Received summary from backend:", summary);
+              console.log("[DEBUG] Latest summary received:", summary);
 
               if (summary) {
                 document.getElementById("summary").textContent = summary;
-
-                fetch("/_update-summary", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ summary })
-                })
-                .then(() => console.log("[INFO] Summary sent to backend."))
-                .catch((err) => console.error("[ERROR] Failed to store summary:", err));
               } else {
                 document.getElementById("summary").textContent =
-                  "No summary returned from backend.";
-                console.warn("[WARN] Summary missing in API response.");
+                  "No summary was returned from the call.";
               }
             })
-            .catch((err) =>
-              console.error("[ERROR] Failed to fetch latest summary:", err)
-            );
+            .catch((err) => {
+              console.error("[ERROR] Failed to fetch latest summary:", err);
+              document.getElementById("summary").textContent =
+                "Failed to load summary from the server.";
+            });
         });
       };
     })(document, "script");
-
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("show-summary").addEventListener("click", () => {
-        fetch("/_get-summary")
-          .then((res) => res.json())
-          .then((data) => {
-            document.getElementById("summary").textContent =
-              data.summary || "No summary available yet.";
-          })
-          .catch((err) =>
-            console.error("[ERROR] Failed GET /_get-summary:", err)
-          );
-      });
-    });
   </script>
 </body>
 </html>
