@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <title>AI Fitness Coach</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&
+          family=Roboto+Mono:wght@400;700&display=swap"
+    rel="stylesheet"
+  >
   <style>
     html, body {
       min-height: 100vh;
@@ -20,9 +24,9 @@
       flex-direction: column;
       align-items: center;
       padding-bottom: 100px;
-      min-height: 100vh;
       overflow-x: hidden;
     }
+
     h1 {
       margin: 44px 0 8px;
       font-size: 2.7rem;
@@ -31,6 +35,8 @@
       text-shadow: 0 2px 16px #28309c55;
       text-align: center;
     }
+
+    /* your avatar */
     .avatar-illustration {
       width: 110px; height: 110px;
       margin-bottom: 4px;
@@ -51,11 +57,7 @@
       border: 4px solid #2f80ed44;
       box-shadow: 0 2px 8px #28309c22;
     }
-    .avatar-attribution {
-      font-size: 0.93rem;
-      color: #9fdcf5;
-      margin-bottom: 18px;
-    }
+
     .empty-copy {
       color: #b1f3f7;
       font-size: 1.09rem;
@@ -63,6 +65,8 @@
       margin-bottom: 20px;
       max-width: 80vw;
     }
+
+    /* keep your workout‑plan button */
     #show-summary-btn {
       background: linear-gradient(90deg, #41b883, #2f80ed 70%);
       color: #fff;
@@ -82,6 +86,7 @@
       box-shadow: 0 8px 38px #41b88377, 0 2.5px 6px #121c33cc;
       transform: translateY(-2px) scale(1.04);
     }
+
     .status-msg {
       color: #62d5fa;
       font-family: 'Roboto Mono', monospace;
@@ -93,6 +98,7 @@
       margin-bottom: 12px;
     }
     .status-msg:empty { display: none; }
+
     h2 {
       margin: .6em 0 .4em;
       font-size: 1.35rem;
@@ -101,27 +107,40 @@
       text-shadow: 0 2px 12px #192f3a88;
       text-align: center;
     }
+
+    /* → expanded width / remove flex centering ← */
     pre#summary {
       background: rgba(28, 32, 49, 0.97);
       border-radius: 18px;
       box-shadow: 0 6px 24px #10132299, 0 2px 12px #23c3e655;
-      padding: 22px 36px 18px 36px;   /* more top/side padding */
+      padding: 14px 30px;           /* a bit more horizontal padding */
       font-size: 1.05rem;
       color: #cbe7fd;
       font-family: 'Roboto Mono', monospace;
-      width: 560px;
-      max-width: 98vw;
+      width: 500px;                 /* wider chat box */
+      max-width: 94vw;
       height: 110px;
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-word;
       margin-bottom: 32px;
       text-align: left;
-      /* remove align-items: center so text is top-aligned! */
-      display: block;
+      display: block;               /* remove flex centering */
     }
+
+    /* Hide Vapi’s built‑in floating call button */
+    .vapi-floating-button,
+    .vapi-launch-button,
+    button[aria-label="Call"] {
+      display: none !important;
+    }
+
     @media (max-width: 800px) {
-      pre#summary { width: 99vw; height: 98px; padding: 11px; }
+      pre#summary {
+        width: 96vw;
+        height: 75px;
+        padding: 11px 16px;
+      }
       h1 { font-size: 1.4rem; }
       h2 { font-size: 1.01rem; }
       .avatar-illustration { width: 78px; height: 78px; }
@@ -131,45 +150,47 @@
 </head>
 <body>
   <h1>Talk to your Personalized AI Trainer</h1>
+
+  <!-- avatar now *is* the only call trigger -->
   <div class="avatar-illustration" id="start-call" title="Click to start your AI trainer call">
     <img src="{{ url_for('static', filename='img/coach.png') }}" alt="Fitness Coach" />
   </div>
-  <div class="avatar-attribution">
-    Fitness icons created by Nsit - Flaticon
-  </div>
+
   <div class="empty-copy">
-    <span style="font-weight:600;">Click the icon above to start your call!</span>
-    <br>
+    <span style="font-weight:600;">Click the icon above to start your call!</span><br>
     You'll get a personalized workout plan after the call.
   </div>
+
+  <!-- keep this for fetching the summary -->
   <button id="show-summary-btn">Show My Workout Plan!</button>
   <div id="status" class="status-msg"></div>
   <h2>Here is your workout plan:</h2>
   <pre id="summary">Complete the call, then click "Show My Workout Plan!" to see your workout plan below.</pre>
+
   <script>
     let vapi;
     (function (d, t) {
-      const g = d.createElement(t);
-      const s = d.getElementsByTagName(t)[0];
+      const g = d.createElement(t), s = d.getElementsByTagName(t)[0];
       g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
-      g.async = true;
-      g.defer = true;
+      g.async = true; g.defer = true;
       s.parentNode.insertBefore(g, s);
 
       g.onload = function () {
-        // Remove all call button functionality, just initialize (hidden)
         vapi = window.vapiSDK.run({
           apiKey: "{{ vapi_public_key }}",
           assistant: "{{ assistant_id }}",
           config: {
-            showButton: false // No button rendered anywhere!
+            label: "",
+            showButton: false    // request no default button
           }
         });
+        // extra safeguard: hide any floating button
+        if (vapi.hideButton) vapi.hideButton();
       };
     })(document, "script");
 
     document.addEventListener("DOMContentLoaded", function () {
-      // Avatar click starts the call
+      // avatar click → start the Vapi call
       document.getElementById("start-call").addEventListener("click", function () {
         if (window.vapi && typeof window.vapi.startCall === "function") {
           window.vapi.startCall();
@@ -178,31 +199,35 @@
         }
       });
 
-      // Show summary
+      // summary button
       document.getElementById("show-summary-btn").addEventListener("click", function () {
-        document.getElementById("status").textContent = "Loading your workout plan...";
-        document.getElementById("status").style.color = "#41ffb8";
+        const statusEl = document.getElementById("status");
+        statusEl.textContent = "Loading your workout plan...";
+        statusEl.style.color = "#41ffb8";
+
         fetch(`/_fetch-latest-summary`)
-          .then((res) => res.json())
-          .then((data) => {
+          .then(res => res.json())
+          .then(data => {
+            const summaryEl = document.getElementById("summary");
             if (data.summary) {
-              document.getElementById("summary").textContent = data.summary.replace(/\*\*/g, "");
-              document.getElementById("status").textContent = "Workout plan loaded successfully!";
-              document.getElementById("status").style.color = "#41ffb8";
+              summaryEl.textContent = data.summary.replace(/\*\*/g, "");
+              statusEl.textContent = "Workout plan loaded successfully!";
+              statusEl.style.color = "#41ffb8";
             } else {
-              document.getElementById("summary").textContent =
-                data.error ? `Error: ${data.error}` : "No workout plan was returned from your call.";
-              document.getElementById("status").textContent =
-                data.error ? `(${data.error})` : "No workout plan found.";
-              document.getElementById("status").style.color = "#fa6262";
+              summaryEl.textContent = data.error
+                ? `Error: ${data.error}`
+                : "No workout plan was returned from your call.";
+              statusEl.textContent = data.error
+                ? `(${data.error})`
+                : "No workout plan found.";
+              statusEl.style.color = "#fa6262";
             }
           })
-          .catch((err) => {
+          .catch(err => {
             document.getElementById("summary").textContent =
               "Failed to load workout plan from the server.";
-            document.getElementById("status").textContent =
-              "Error connecting to backend.";
-            document.getElementById("status").style.color = "#fa6262";
+            statusEl.textContent = "Error connecting to backend.";
+            statusEl.style.color = "#fa6262";
           });
       });
     });
