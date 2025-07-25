@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>AI Fitness Coach</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Google Fonts for modern look -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     html, body {
@@ -24,7 +23,6 @@
       min-height: 100vh;
       overflow-x: hidden;
     }
-
     h1 {
       margin: 44px 0 8px;
       font-size: 2.7rem;
@@ -33,14 +31,17 @@
       text-shadow: 0 2px 16px #28309c55;
       text-align: center;
     }
-
-    /* Avatar Illustration */
     .avatar-illustration {
       width: 110px; height: 110px;
       margin-bottom: 4px;
-      background: none;
-      box-shadow: none;
       display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.2s;
+      box-shadow: 0 0 0 #00ffe7;
+    }
+    .avatar-illustration:hover {
+      box-shadow: 0 0 32px #00ffe7, 0 2px 14px #18222788;
+      transform: scale(1.05);
     }
     .avatar-illustration img {
       width: 78px; height: 78px;
@@ -50,43 +51,18 @@
       border: 4px solid #2f80ed44;
       box-shadow: 0 2px 8px #28309c22;
     }
-
     .avatar-attribution {
       font-size: 0.93rem;
       color: #9fdcf5;
       margin-bottom: 18px;
     }
-
     .empty-copy {
       color: #b1f3f7;
       font-size: 1.09rem;
       text-align: center;
-      margin-bottom: 14px;
+      margin-bottom: 20px;
       max-width: 80vw;
     }
-
-    /* Call button styles */
-    #vapi-float-bar {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      min-height: 80px;
-      margin-bottom: 24px;
-      position: static !important;
-    }
-    #vapi-button-container { display: none; }
-    .vapi-call-button {
-      transform: scale(1.35);
-      min-width: 84px; min-height: 84px;
-      font-size: 1.2rem;
-      border-radius: 50% !important;
-      box-shadow: 0 0 38px #00ffe7, 0 3px 16px #182227aa !important;
-      background: #2f80ed !important;
-      pointer-events: all;
-    }
-
-    /* "Show My Workout Plan" */
     #show-summary-btn {
       background: linear-gradient(90deg, #41b883, #2f80ed 70%);
       color: #fff;
@@ -106,7 +82,6 @@
       box-shadow: 0 8px 38px #41b88377, 0 2.5px 6px #121c33cc;
       transform: translateY(-2px) scale(1.04);
     }
-
     .status-msg {
       color: #62d5fa;
       font-family: 'Roboto Mono', monospace;
@@ -118,7 +93,6 @@
       margin-bottom: 12px;
     }
     .status-msg:empty { display: none; }
-
     h2 {
       margin: .6em 0 .4em;
       font-size: 1.35rem;
@@ -127,8 +101,6 @@
       text-shadow: 0 2px 12px #192f3a88;
       text-align: center;
     }
-
-    /* Wider chat box, same height */
     pre#summary {
       background: rgba(28, 32, 49, 0.97);
       border-radius: 18px;
@@ -148,7 +120,6 @@
       display: flex;
       align-items: center;
     }
-
     @media (max-width: 800px) {
       pre#summary { width: 96vw; height: 75px; padding: 11px; }
       h1 { font-size: 1.4rem; }
@@ -160,31 +131,22 @@
 </head>
 <body>
   <h1>Talk to your Personalized AI Trainer</h1>
-
-  <!-- Your uploaded avatar image -->
-  <div class="avatar-illustration">
+  <div class="avatar-illustration" id="start-call" title="Click to start your AI trainer call">
     <img src="{{ url_for('static', filename='img/coach.png') }}" alt="Fitness Coach" />
   </div>
-  <div class="avatar-attribution">
-    Fitness icons created by Nsit - Flaticon
-  </div>
-
+  
   <div class="empty-copy">
-    Ready to help you get started! Start your call below to get a personalized workout plan.
+    <span style="font-weight:600;">Click the icon above to start your call!</span>
+    <br>
+    You'll get a personalized workout plan after the call.
   </div>
-
-  <!-- Call button appears here -->
-  <div id="vapi-float-bar"></div>
-  <div id="vapi-button-container"></div>
-
-  <!-- Show plan button directly below call button -->
+  <!-- No call button! -->
   <button id="show-summary-btn">Show My Workout Plan!</button>
   <div id="status" class="status-msg"></div>
-
   <h2>Here is your workout plan:</h2>
   <pre id="summary">Complete the call, then click "Show My Workout Plan!" to see your workout plan below.</pre>
-
   <script>
+    let vapi;
     (function (d, t) {
       const g = d.createElement(t);
       const s = d.getElementsByTagName(t)[0];
@@ -194,38 +156,28 @@
       s.parentNode.insertBefore(g, s);
 
       g.onload = function () {
-        window.vapi = window.vapiSDK.run({
+        // Initialize Vapi SDK (hidden, no button shown)
+        vapi = window.vapiSDK.run({
           apiKey: "{{ vapi_public_key }}",
           assistant: "{{ assistant_id }}",
           config: {
-            label: "Start Workout Call",
-            container: "#vapi-button-container",
-            theme: "light"
+            label: "", // No label needed
+            showButton: false // Hide the default button
           }
         });
-        setTimeout(function () {
-          var vapiBtn = document.querySelector('#vapi-button-container .vapi-call-button');
-          var floatBar = document.getElementById('vapi-float-bar');
-          if (vapiBtn && floatBar && !floatBar.contains(vapiBtn)) {
-            floatBar.appendChild(vapiBtn);
-            vapiBtn.style.boxShadow = "0 0 38px #00ffe7, 0 3px 16px #182227aa";
-            vapiBtn.style.borderRadius = "50%";
-            vapiBtn.style.background = "#2f80ed";
-            vapiBtn.style.pointerEvents = "all";
-            vapiBtn.style.transform = "scale(1.35)";
-            vapiBtn.style.minWidth = "84px";
-            vapiBtn.style.minHeight = "84px";
-            vapiBtn.style.fontSize = "1.2rem";
-          }
-        }, 500);
       };
     })(document, "script");
 
-    function cleanSummary(summary) {
-      if (!summary) return '';
-      return summary.replace(/\*\*/g, "");
-    }
+    // When the avatar is clicked, start the call
     document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("start-call").addEventListener("click", function () {
+        if (window.vapi && typeof window.vapi.startCall === "function") {
+          window.vapi.startCall();
+        } else {
+          alert("AI voice agent is still loading. Please wait a second and try again.");
+        }
+      });
+
       document.getElementById("show-summary-btn").addEventListener("click", function () {
         document.getElementById("status").textContent = "Loading your workout plan...";
         document.getElementById("status").style.color = "#41ffb8";
@@ -233,8 +185,7 @@
           .then((res) => res.json())
           .then((data) => {
             if (data.summary) {
-              const cleaned = cleanSummary(data.summary);
-              document.getElementById("summary").textContent = cleaned;
+              document.getElementById("summary").textContent = data.summary.replace(/\*\*/g, "");
               document.getElementById("status").textContent = "Workout plan loaded successfully!";
               document.getElementById("status").style.color = "#41ffb8";
             } else {
