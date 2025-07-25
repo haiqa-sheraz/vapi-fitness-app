@@ -14,12 +14,14 @@
       background: radial-gradient(ellipse at 70% 30%, #232a4c 60%, #15192c 100%);
       color: #ececec;
       box-sizing: border-box;
+      width: 100%;
     }
     body {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-bottom: 120px;
+      padding-bottom: 100px;
+      min-height: 100vh;
       overflow-x: hidden;
     }
 
@@ -50,7 +52,6 @@
       box-shadow: 0 2px 8px #28309c22;
     }
 
-    /* Friendly empty‑state text */
     .empty-copy {
       color: #b1f3f7;
       font-size: 1.09rem;
@@ -59,18 +60,17 @@
       max-width: 80vw;
     }
 
-    /* Call button container (now static in flow) */
+    /* Call button styles */
     #vapi-float-bar {
-      position: static !important;
-      display: flex !important;
-      justify-content: center !important;
+      display: flex;
+      justify-content: center;
       align-items: center;
+      width: 100%;
+      min-height: 80px;
       margin-bottom: 32px;
+      position: static !important;
     }
-    #vapi-float-bar > * { pointer-events: all; }
     #vapi-button-container { display: none; }
-
-    /* Make the call button larger */
     .vapi-call-button {
       transform: scale(1.35);
       min-width: 84px; min-height: 84px;
@@ -78,6 +78,7 @@
       border-radius: 50% !important;
       box-shadow: 0 0 38px #00ffe7, 0 3px 16px #182227aa !important;
       background: #2f80ed !important;
+      pointer-events: all;
     }
 
     /* "Show My Workout Plan" */
@@ -93,6 +94,7 @@
       cursor: pointer;
       margin-bottom: 24px;
       transition: background .2s, box-shadow .2s, transform .15s;
+      display: block;
     }
     #show-summary-btn:hover {
       background: linear-gradient(90deg, #41b883 50%, #1c60c8 100%);
@@ -126,18 +128,20 @@
       background: rgba(28, 32, 49, 0.97);
       border-radius: 18px;
       box-shadow: 0 6px 24px #10132299, 0 2px 12px #23c3e655;
-      padding: 14px 20px;
-      font-size: 1.04rem;
+      padding: 14px 26px;
+      font-size: 1.05rem;
       color: #cbe7fd;
       font-family: 'Roboto Mono', monospace;
-      width: 420px;      /* ↑ wider */
-      max-width: 90vw;
-      height: 110px;     /* same */
+      width: 440px;
+      max-width: 94vw;
+      height: 110px;
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-word;
       margin-bottom: 32px;
       text-align: left;
+      display: flex;
+      align-items: center;
     }
 
     @media (max-width: 800px) {
@@ -152,29 +156,101 @@
 <body>
   <h1>Talk to your Personalized AI Trainer</h1>
 
-  <div class="avatar-illustration">
-  <img src="https://avataaars.io/?avatarStyle=Transparent&topType=LongHairCurvy&accessoriesType=Wayfarers&hairColor=Black&facialHairType=Blank&clotheType=Hoodie&clotheColor=PastelBlue&eyeType=Default&eyebrowType=RaisedExcitedNatural&mouthType=Twinkle&skinColor=Light" 
-       alt="Trainer Avatar" />
-  </div>
+  <div class="avatar-illustration" style="background:none; box-shadow:none; margin-bottom: 4px;">
+  <a href="https://www.flaticon.com/free-icons/fitness" title="fitness icons" target="_blank" style="display: flex; align-items: center; justify-content: center;">
+    <!-- Example fitness icon from Nsit - Flaticon (you can change the image URL to any other icon you like from Flaticon) -->
+    <img src="https://cdn-icons-png.flaticon.com/512/2964/2964514.png" alt="Fitness Icon" style="width:68px; height:68px;"/>
+  </a>
+</div>
+<div style="font-size:0.93rem; color:#9fdcf5; margin-bottom:18px;">
+  Fitness icons created by Nsit - Flaticon
+</div>
+
   <div class="empty-copy">
     Ready to help you get started! Start your call below to get a personalized workout plan.
   </div>
 
-  <!-- 1) Call button (now above the Show Plan button) -->
+  <!-- Call button will show up here -->
   <div id="vapi-float-bar"></div>
   <div id="vapi-button-container"></div>
 
-  <!-- 2) Show plan -->
+  <!-- Show plan button -->
   <button id="show-summary-btn">Show My Workout Plan!</button>
   <div id="status" class="status-msg"></div>
 
   <h2>Here is your workout plan:</h2>
-  <pre id="summary">
-Complete the call, then click "Show My Workout Plan!" to see your workout plan below.
-  </pre>
+  <pre id="summary">Complete the call, then click "Show My Workout Plan!" to see your workout plan below.</pre>
 
   <script>
-    /* … your existing Vapi + fetch logic (unchanged) … */
+    (function (d, t) {
+      const g = d.createElement(t);
+      const s = d.getElementsByTagName(t)[0];
+      g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+      g.async = true;
+      g.defer = true;
+      s.parentNode.insertBefore(g, s);
+
+      g.onload = function () {
+        window.vapi = window.vapiSDK.run({
+          apiKey: "{{ vapi_public_key }}",
+          assistant: "{{ assistant_id }}",
+          config: {
+            label: "Start Workout Call",
+            container: "#vapi-button-container",
+            theme: "light"
+          }
+        });
+        setTimeout(function () {
+          var vapiBtn = document.querySelector('#vapi-button-container .vapi-call-button');
+          var floatBar = document.getElementById('vapi-float-bar');
+          if (vapiBtn && floatBar && !floatBar.contains(vapiBtn)) {
+            floatBar.appendChild(vapiBtn);
+            vapiBtn.style.boxShadow = "0 0 38px #00ffe7, 0 3px 16px #182227aa";
+            vapiBtn.style.borderRadius = "50%";
+            vapiBtn.style.background = "#2f80ed";
+            vapiBtn.style.pointerEvents = "all";
+            vapiBtn.style.transform = "scale(1.35)";
+            vapiBtn.style.minWidth = "84px";
+            vapiBtn.style.minHeight = "84px";
+            vapiBtn.style.fontSize = "1.2rem";
+          }
+        }, 500);
+      };
+    })(document, "script");
+
+    function cleanSummary(summary) {
+      if (!summary) return '';
+      return summary.replace(/\*\*/g, "");
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("show-summary-btn").addEventListener("click", function () {
+        document.getElementById("status").textContent = "Loading your workout plan...";
+        document.getElementById("status").style.color = "#41ffb8";
+        fetch(`/_fetch-latest-summary`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.summary) {
+              const cleaned = cleanSummary(data.summary);
+              document.getElementById("summary").textContent = cleaned;
+              document.getElementById("status").textContent = "Workout plan loaded successfully!";
+              document.getElementById("status").style.color = "#41ffb8";
+            } else {
+              document.getElementById("summary").textContent =
+                data.error ? `Error: ${data.error}` : "No workout plan was returned from your call.";
+              document.getElementById("status").textContent =
+                data.error ? `(${data.error})` : "No workout plan found.";
+              document.getElementById("status").style.color = "#fa6262";
+            }
+          })
+          .catch((err) => {
+            document.getElementById("summary").textContent =
+              "Failed to load workout plan from the server.";
+            document.getElementById("status").textContent =
+              "Error connecting to backend.";
+            document.getElementById("status").style.color = "#fa6262";
+          });
+      });
+    });
   </script>
 </body>
 </html>
