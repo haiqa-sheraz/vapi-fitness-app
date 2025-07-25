@@ -105,23 +105,23 @@
       background: rgba(28, 32, 49, 0.97);
       border-radius: 18px;
       box-shadow: 0 6px 24px #10132299, 0 2px 12px #23c3e655;
-      padding: 14px 26px;
+      padding: 22px 36px 18px 36px;   /* more top/side padding */
       font-size: 1.05rem;
       color: #cbe7fd;
       font-family: 'Roboto Mono', monospace;
-      width: 440px;
-      max-width: 94vw;
+      width: 560px;
+      max-width: 98vw;
       height: 110px;
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-word;
       margin-bottom: 32px;
       text-align: left;
-      display: flex;
-      align-items: center;
+      /* remove align-items: center so text is top-aligned! */
+      display: block;
     }
     @media (max-width: 800px) {
-      pre#summary { width: 96vw; height: 75px; padding: 11px; }
+      pre#summary { width: 99vw; height: 98px; padding: 11px; }
       h1 { font-size: 1.4rem; }
       h2 { font-size: 1.01rem; }
       .avatar-illustration { width: 78px; height: 78px; }
@@ -134,13 +134,14 @@
   <div class="avatar-illustration" id="start-call" title="Click to start your AI trainer call">
     <img src="{{ url_for('static', filename='img/coach.png') }}" alt="Fitness Coach" />
   </div>
-  
+  <div class="avatar-attribution">
+    Fitness icons created by Nsit - Flaticon
+  </div>
   <div class="empty-copy">
     <span style="font-weight:600;">Click the icon above to start your call!</span>
     <br>
     You'll get a personalized workout plan after the call.
   </div>
-  <!-- No call button! -->
   <button id="show-summary-btn">Show My Workout Plan!</button>
   <div id="status" class="status-msg"></div>
   <h2>Here is your workout plan:</h2>
@@ -156,20 +157,19 @@
       s.parentNode.insertBefore(g, s);
 
       g.onload = function () {
-        // Initialize Vapi SDK (hidden, no button shown)
+        // Remove all call button functionality, just initialize (hidden)
         vapi = window.vapiSDK.run({
           apiKey: "{{ vapi_public_key }}",
           assistant: "{{ assistant_id }}",
           config: {
-            label: "", // No label needed
-            showButton: false // Hide the default button
+            showButton: false // No button rendered anywhere!
           }
         });
       };
     })(document, "script");
 
-    // When the avatar is clicked, start the call
     document.addEventListener("DOMContentLoaded", function () {
+      // Avatar click starts the call
       document.getElementById("start-call").addEventListener("click", function () {
         if (window.vapi && typeof window.vapi.startCall === "function") {
           window.vapi.startCall();
@@ -178,6 +178,7 @@
         }
       });
 
+      // Show summary
       document.getElementById("show-summary-btn").addEventListener("click", function () {
         document.getElementById("status").textContent = "Loading your workout plan...";
         document.getElementById("status").style.color = "#41ffb8";
