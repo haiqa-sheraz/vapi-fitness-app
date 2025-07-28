@@ -24,8 +24,6 @@
       align-items: center;
       justify-content: flex-start;
       min-height: 100vh;
-      position: relative;
-      padding-bottom: 110px; /* ensures nothing goes behind call button */
       width: 100vw;
       overflow-x: hidden;
     }
@@ -37,6 +35,10 @@
       letter-spacing: 1.5px;
       text-shadow: 0 2px 16px #28309c55;
       text-align: center;
+    }
+
+    #vapi-button-container {
+      margin: 30px 0 10px 0;
     }
 
     #show-summary-btn {
@@ -53,11 +55,13 @@
       cursor: pointer;
       margin: 18px 0 26px 0;
     }
+
     #show-summary-btn:hover {
       background: linear-gradient(90deg, #41b883 50%, #1c60c8 100%);
       box-shadow: 0 8px 38px #41b88377, 0 2.5px 6px #121c33cc;
       transform: translateY(-2px) scale(1.04);
     }
+
     .status-msg {
       margin: 0 0 8px 0;
       color: #62d5fa;
@@ -68,6 +72,7 @@
       font-family: 'Roboto Mono', monospace;
       font-weight: 700;
     }
+
     .status-msg:empty {
       display: none;
     }
@@ -81,6 +86,7 @@
       text-shadow: 0 2px 12px #192f3a88;
       text-align: center;
     }
+
     pre#summary {
       background: rgba(28, 32, 49, 0.97);
       border-radius: 22px;
@@ -93,7 +99,7 @@
       width: 60vw;
       max-width: 90vw;
       min-width: 220px;
-      height: 240px;        /* <<<<<< SMALLER HEIGHT FOR DESKTOP */
+      height: 240px;
       min-height: 100px;
       max-height: 240px;
       overflow-y: auto;
@@ -102,12 +108,13 @@
       white-space: pre-wrap;
       transition: box-shadow 0.2s;
     }
+
     @media (max-width: 800px) {
       pre#summary {
         width: 94vw;
         font-size: 1em;
         padding: 14px 8px 14px 10px;
-        height: 160px;     /* <<<< SMALLER FIXED HEIGHT FOR MOBILE */
+        height: 160px;
         max-height: 160px;
         min-height: 60px;
       }
@@ -118,37 +125,19 @@
         font-size: 1.3rem;
       }
     }
-
-    /* Fix/floating call button at the bottom center */
-    #vapi-float-bar {
-      position: fixed !important;
-      bottom: 30px !important;
-      left: 0; right: 0;
-      z-index: 9999 !important;
-      width: 100vw !important;
-      display: flex !important;
-      justify-content: center !important;
-      pointer-events: none;
-    }
-    #vapi-float-bar > * {
-      pointer-events: all;
-    }
-    #vapi-button-container {
-      display: none; /* Hide the normal inline button */
-    }
   </style>
 </head>
 <body>
   <h1>Talk to your Personalized AI Trainer</h1>
+
+  <!-- Moved call button container above workout button -->
+  <div id="vapi-button-container"></div>
+
   <button id="show-summary-btn">Show My Workout Plan!</button>
   <div id="status" class="status-msg"></div>
+
   <h2>Here is your workout plan:</h2>
   <pre id="summary">Complete the call, then click "Show My Workout Plan!" to see your workout plan below.</pre>
-
-  <!-- Floating call button bar -->
-  <div id="vapi-float-bar"></div>
-  <!-- Hidden normal container for the call button (we'll move it after load) -->
-  <div id="vapi-button-container"></div>
 
   <script>
     (function (d, t) {
@@ -160,7 +149,6 @@
       s.parentNode.insertBefore(g, s);
 
       g.onload = function () {
-        // 1. Create the button normally in its (hidden) container
         window.vapi = window.vapiSDK.run({
           apiKey: "{{ vapi_public_key }}",
           assistant: "{{ assistant_id }}",
@@ -170,18 +158,6 @@
             theme: "light"
           }
         });
-        // 2. After a moment, move the button into the floating bar
-        setTimeout(function () {
-          var vapiBtn = document.querySelector('#vapi-button-container .vapi-call-button');
-          var floatBar = document.getElementById('vapi-float-bar');
-          if (vapiBtn && floatBar && !floatBar.contains(vapiBtn)) {
-            floatBar.appendChild(vapiBtn);
-            vapiBtn.style.boxShadow = "0 0 32px #00ffe7, 0 2px 14px #18222788";
-            vapiBtn.style.borderRadius = "50%";
-            vapiBtn.style.background = "#2f80ed";
-            vapiBtn.style.pointerEvents = "all";
-          }
-        }, 500); // wait for the button to render
       };
     })(document, "script");
 
@@ -189,6 +165,7 @@
       if (!summary) return '';
       return summary.replace(/\*\*/g, "");
     }
+
     document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("show-summary-btn").addEventListener("click", function () {
         document.getElementById("status").textContent = "Loading your workout plan...";
