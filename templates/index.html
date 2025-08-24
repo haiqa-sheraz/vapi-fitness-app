@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Google Fonts for modern look -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+   <link href='https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap' rel="stylesheet">
   <style>
     html, body {
       min-height: 100vh;
@@ -46,7 +47,7 @@
       padding: 13px 32px;
       border-radius: 32px;
       font-size: 1.1rem;
-      font-family: 'Montserrat', Arial, sans-serif;
+      font-family: 'Poppins', sans-serif;
       font-weight: 600;
       box-shadow: 0 4px 32px #0ff7df44, 0 1.5px 3px #2224;
       transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
@@ -65,7 +66,7 @@
       min-height: 1em;
       transition: color 0.2s;
       text-align: center;
-      font-family: 'Roboto Mono', monospace;
+      font-family: 'Poppins', sans-serif;
       font-weight: 700;
     }
     .status-msg:empty {
@@ -75,7 +76,7 @@
     h2 {
       margin-bottom: 0.7em;
       font-size: 2rem;
-      font-family: 'Montserrat', Arial, sans-serif;
+      font-family: 'Poppins', sans-serif;
       color: #9fdcf5;
       letter-spacing: 1px;
       text-shadow: 0 2px 12px #192f3a88;
@@ -88,7 +89,7 @@
       padding: 22px 20px 16px 22px;
       font-size: 1.08rem;
       color: #cbe7fd;
-      font-family: 'Roboto Mono', 'Courier New', monospace;
+      font-family: 'Poppins', sans-serif;
       margin: 0 auto 28px auto;
       width: 60vw;
       max-width: 90vw;
@@ -112,7 +113,9 @@
         min-height: 60px;
       }
       h1 {
-        font-size: 2.1rem;
+        font-size: 1.9rem;
+        font-family: 'Poppins', sans-serif;
+
       }
       h2 {
         font-size: 1.3rem;
@@ -139,11 +142,10 @@
   </style>
 </head>
 <body>
-  <h1>Talk to your Personalized AI Trainer</h1>
+  <h1>Zoey: Your AI Workout Planner</h1>
   <button id="show-summary-btn">Show My Workout Plan!</button>
   <div id="status" class="status-msg"></div>
-  <h2>Here is your workout plan:</h2>
-  <pre id="summary">Complete the call, then click "Show My Workout Plan!" to see your workout plan below.</pre>
+  <pre id="summary">Complete the call, then click "Show My Workout Plan!" to see your workout plan here.</pre>
 
   <!-- Floating call button bar -->
   <div id="vapi-float-bar"></div>
@@ -205,7 +207,7 @@
               document.getElementById("summary").textContent =
                 data.error ? `Error: ${data.error}` : "No workout plan was returned from your call.";
               document.getElementById("status").textContent =
-                data.error ? `(${data.error})` : "No workout plan found.";
+                data.error ? `(${data.error})` : "Please click the button again in few seconds.";
               document.getElementById("status").style.color = "#fa6262";
             }
           })
